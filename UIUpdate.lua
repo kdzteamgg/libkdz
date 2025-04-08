@@ -1176,18 +1176,19 @@ AddCorners(sectionAccent, UDim.new(1, 0))
                 
                 local dropdownButton = CreateInstance("TextButton", {
                     Name = "Button",
-                    Size = UDim2.new(1, 0, 0, 35),
-                    Position = UDim2.new(0, 0, 0, 25),
+                    Size = UDim2.new(1, 0, 0, 40), -- Tăng kích thước của dropdownButton
+                    Position = UDim2.new(0, 0, 0, 30), -- Thêm khoảng cách từ label
                     BackgroundColor3 = settings.dropdownBackground,
                     Text = "",
                     Parent = dropdownFrame
                 })
                 
                 AddCorners(dropdownButton)
+                AddPadding(dropdownButton, 12) -- Thêm padding cho dropdownButton
                 
                 local selectedLabel = CreateInstance("TextLabel", {
-                    Size = UDim2.new(1, -30, 1, 0),
-                    Position = UDim2.new(0, 10, 0, 0),
+                    Size = UDim2.new(1, -40, 1, 0), -- Giảm kích thước của selectedLabel
+                    Position = UDim2.new(0, 20, 0, 0), -- Thêm khoảng cách từ button
                     BackgroundTransparency = 1,
                     Text = default,
                     TextColor3 = settings.textColor,
@@ -1196,6 +1197,8 @@ AddCorners(sectionAccent, UDim.new(1, 0))
                     TextXAlignment = Enum.TextXAlignment.Left,
                     Parent = dropdownButton
                 })
+                
+                AddPadding(selectedLabel, 5) -- Thêm padding cho selectedLabel
                 
                 local dropdownIcon = CreateInstance("ImageLabel", {
                     Size = UDim2.new(0, 20, 0, 20),
