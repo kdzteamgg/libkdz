@@ -1,6 +1,3 @@
--- SimpleUI Library by Claude
--- Một thư viện UI đơn giản và đẹp mắt cho Roblox
-
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
