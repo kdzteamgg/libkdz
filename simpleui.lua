@@ -240,7 +240,7 @@ function SimpleUI:CreateTab(name)
     
         local SliderFrame = Instance.new("Frame")
         SliderFrame.Name = title.."SliderFrame"
-        SliderFrame.Parent = self.ContentContainer
+        SliderFrame.Parent = TabContent
         SliderFrame.BackgroundColor3 = SimpleUI.Colors.LightBackground
         SliderFrame.Size = UDim2.new(1, 0, 0, 35)
     
@@ -260,44 +260,136 @@ function SimpleUI:CreateTab(name)
         SliderLabel.TextSize = 16
         SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     
+        -- Thêm ValueLabel để hiển thị giá trị hiện tại
+        local ValueLabel = Instance.new("TextLabel")
+        ValueLabel.Name = "ValueLabel"
+        ValueLabel.Parent = SliderFrame
+        ValueLabel.BackgroundTransparency = 1
+        ValueLabel.Position = UDim2.new(0.9, 0, 0, 0)
+        ValueLabel.Size = UDim2.new(0.1, 0, 1, 0)
+        ValueLabel.Font = Enum.Font.SourceSansSemibold
+        ValueLabel.Text = tostring(math.floor(default * 10) / 10)
+        ValueLabel.TextColor3 = SimpleUI.Colors.TextColor
+        ValueLabel.TextSize = 16
+        ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    
         local SliderBar = Instance.new("Frame")
         SliderBar.Name = "Bar"
         SliderBar.Parent = SliderFrame
         SliderBar.BackgroundColor3 = SimpleUI.Colors.DarkBackground
         SliderBar.Position = UDim2.new(0.5, 0, 0.5, -5)
         SliderBar.Size = UDim2.new(0.4, 0, 0, 10)
+        
+        local SliderBarCorner = Instance.new("UICorner")
+        SliderBarCorner.CornerRadius = UDim.new(0, 4)
+        SliderBarCorner.Parent = SliderBar
+        
+        -- Thêm thanh fill để hiển thị tiến trình
+        local SliderFill = Instance.new("Frame")
+        SliderFill.Name = "Fill"
+        SliderFill.Parent = SliderBar
+        SliderFill.BackgroundColor3 = SimpleUI.Colors.AccentColor
+        SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        SliderFill.BorderSizePixel = 0
+        
+        local SliderFillCorner = Instance.new("UICorner")
+        SliderFillCorner.CornerRadius = UDim.new(0, 4)
+        SliderFillCorner.Parent = SliderFill
     
         local SliderHandle = Instance.new("Frame")
         SliderHandle.Name = "Handle"
         SliderHandle.Parent = SliderBar
-        SliderHandle.BackgroundColor3 = SimpleUI.Colors.AccentColor
+        SliderHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         SliderHandle.Position = UDim2.new((default - min) / (max - min), -5, 0.5, -5)
         SliderHandle.Size = UDim2.new(0, 10, 0, 10)
+        SliderHandle.ZIndex = 2
+        
+        local SliderHandleCorner = Instance.new("UICorner")
+        SliderHandleCorner.CornerRadius = UDim.new(1, 0)
+        SliderHandleCorner.Parent = SliderHandle
     
-        local function UpdateHandlePosition(value)
-            SliderHandle.Position = UDim2.new((value - min) / (max - min), -5, 0.5, -5)
-        end
+        -- Tạo hitbox lớn hơn cho slider để dễ kéo
+        local SliderHitbox = Instance.new("TextButton")
+        SliderHitbox.Name = "Hitbox"
+        SliderHitbox.Parent = SliderBar
+        SliderHitbox.BackgroundTransparency = 1
+        SliderHitbox.Size = UDim2.new(1, 10, 1, 20)
+        SliderHitbox.Position = UDim2.new(0, -5, 0, -10)
+        SliderHitbox.Text = ""
+        SliderHitbox.ZIndex = 1
     
         local value = default
-        SliderHandle.InputBegan:Connect(function(input)
+        local isDragging = false
+        
+        local function UpdateValue(newValue)
+            value = math.clamp(newValue, min, max)
+            -- Làm tròn đến 1 chữ số thập phân cho hiển thị
+            ValueLabel.Text = tostring(math.floor(value * 10) / 10)
+            
+            -- Cập nhật vị trí handle và fill
+            local percent = (value - min) / (max - min)
+            SliderHandle.Position = UDim2.new(percent, -5, 0.5, -5)
+            SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+            
+            callback(value)
+        end
+        
+        -- Xử lý sự kiện kéo
+        SliderHitbox.MouseButton1Down:Connect(function()
+            isDragging = true
+            
+            -- Tính toán giá trị mới dựa trên vị trí chuột
+            local mousePos = UserInputService:GetMouseLocation()
+            local sliderPos = SliderBar.AbsolutePosition
+            local sliderSize = SliderBar.AbsoluteSize
+            
+            local relativeX = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+            local newValue = min + (max - min) * relativeX
+            
+            UpdateValue(newValue)
+        end)
+        
+        -- Xử lý sự kiện di chuyển chuột khi đang kéo
+        local moveConnection
+        SliderHitbox.MouseButton1Down:Connect(function()
+            if moveConnection then moveConnection:Disconnect() end
+            
+            moveConnection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local sliderPos = SliderBar.AbsolutePosition
+                    local sliderSize = SliderBar.AbsoluteSize
+                    
+                    local relativeX = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+                    local newValue = min + (max - min) * relativeX
+                    
+                    UpdateValue(newValue)
+                end
+            end)
+        end)
+        
+        -- Xử lý sự kiện nhả chuột
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 and isDragging then
+                isDragging = false
+                if moveConnection then
+                    moveConnection:Disconnect()
+                    moveConnection = nil
+                end
+            end
+        end)
+        
+        -- Xử lý sự kiện khi người dùng click trực tiếp vào thanh
+        SliderBar.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                local moveConnection
-    
-                moveConnection = RunService.RenderStepped:Connect(function()
-                    local mouseX = UserInputService:GetMouseLocation().X
-                    local barStart = SliderBar.AbsolutePosition.X
-                    local barEnd = barStart + SliderBar.AbsoluteSize.X
-                    local percent = math.clamp((mouseX - barStart) / (barEnd - barStart), 0, 1)
-                    value = math.floor(min + (max - min) * percent + 0.5)
-                    UpdateHandlePosition(value)
-                    callback(value)
-                end)
-    
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        moveConnection:Disconnect()
-                    end
-                end)
+                local mousePos = UserInputService:GetMouseLocation()
+                local sliderPos = SliderBar.AbsolutePosition
+                local sliderSize = SliderBar.AbsoluteSize
+                
+                local relativeX = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+                local newValue = min + (max - min) * relativeX
+                
+                UpdateValue(newValue)
             end
         end)
     
@@ -305,9 +397,7 @@ function SimpleUI:CreateTab(name)
         local SliderAPI = {}
     
         function SliderAPI:Set(newValue)
-            value = math.clamp(newValue, min, max)
-            UpdateHandlePosition(value)
-            callback(value)
+            UpdateValue(newValue)
         end
     
         function SliderAPI:Get()
