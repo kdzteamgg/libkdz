@@ -234,14 +234,13 @@ function SimpleUI:CreateTab(name)
     -- Tab API
     local TabAPI = {}
 
-    -- Thêm phương thức CreateSlider vào tab API
     function TabAPI:CreateSlider(title, min, max, default, callback)
         default = default or min
         callback = callback or function() end
     
         local SliderFrame = Instance.new("Frame")
         SliderFrame.Name = title.."SliderFrame"
-        SliderFrame.Parent = TabContent
+        SliderFrame.Parent = self.ContentContainer
         SliderFrame.BackgroundColor3 = SimpleUI.Colors.LightBackground
         SliderFrame.Size = UDim2.new(1, 0, 0, 35)
     
@@ -283,12 +282,13 @@ function SimpleUI:CreateTab(name)
         SliderHandle.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 local moveConnection
+    
                 moveConnection = RunService.RenderStepped:Connect(function()
                     local mouseX = UserInputService:GetMouseLocation().X
                     local barStart = SliderBar.AbsolutePosition.X
                     local barEnd = barStart + SliderBar.AbsoluteSize.X
                     local percent = math.clamp((mouseX - barStart) / (barEnd - barStart), 0, 1)
-                    value = min + (max - min) * percent
+                    value = math.floor(min + (max - min) * percent + 0.5)
                     UpdateHandlePosition(value)
                     callback(value)
                 end)
