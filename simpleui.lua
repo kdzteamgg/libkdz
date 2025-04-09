@@ -1,3 +1,4 @@
+-- cc
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -315,7 +316,7 @@ function SimpleUI:CreateTab(name)
     
         return SliderAPI
     end
-    
+
     -- Thêm nút thu nhỏ (-) vào Main
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Name = "MinimizeButton"
