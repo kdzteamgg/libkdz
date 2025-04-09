@@ -95,61 +95,6 @@ function SimpleUI.new(title)
     CloseButton.MouseButton1Click:Connect(function()
         ScreenGui:Destroy()
     end)
-
-    local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Name = "MinimizeButton"
-    MinimizeButton.Parent = Header
-    MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
-    MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    MinimizeButton.Font = Enum.Font.SourceSansBold
-    MinimizeButton.Text = "-"
-    MinimizeButton.TextColor3 = SimpleUI.Colors.TextColor
-    MinimizeButton.TextSize = 24
-    
-    -- Biến để theo dõi trạng thái thu nhỏ
-    local minimized = false
-    local originalSize = Main.Size
-    local originalTabContainerSize = TabContainer.Size
-    local originalContentContainerPos = ContentContainer.Position
-    local originalContentContainerSize = ContentContainer.Size
-    
-    -- Xử lý sự kiện khi nhấn nút thu nhỏ
-    MinimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        
-        if minimized then
-            -- Thu nhỏ UI
-            TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 600, 0, 30)}):Play()
-            TweenService:Create(TabContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-            TweenService:Create(ContentContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, 0, 0, 0)}):Play()
-            MinimizeButton.Text = "+"
-        else
-            -- Khôi phục kích thước
-            TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalSize}):Play()
-            TweenService:Create(TabContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalTabContainerSize}):Play()
-            TweenService:Create(ContentContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalContentContainerSize, Position = originalContentContainerPos}):Play()
-            MinimizeButton.Text = "-"
-        end
-    end)
-    
-    -- Thêm chức năng ẩn/hiện khi nhấn phím Left Ctrl
-    local hidden = false
-    local originalPosition = Main.Position
-    
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if input.KeyCode == Enum.KeyCode.LeftControl and not gameProcessed then
-            hidden = not hidden
-            
-            if hidden then
-                -- Ẩn UI
-                TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(-1, 0, originalPosition.Y.Scale, originalPosition.Y.Offset)}):Play()
-            else
-                -- Hiện UI
-                TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = originalPosition}):Play()
-            end
-        end
-    end)
     
     -- Tab Container
     local TabContainer = Instance.new("Frame")
@@ -207,12 +152,7 @@ function SimpleUI.new(title)
     UILibrary.ContentContainer = ContentContainer
     UILibrary.Tabs = {}
     UILibrary.ActiveTab = nil
-    UILibrary.MinimizeButton = MinimizeButton
-    UILibrary.Minimized = minimized
-    UILibrary.Hidden = hidden
-    UILibrary.OriginalSize = originalSize
-    UILibrary.OriginalPosition = originalPosition
-
+    
     return UILibrary
 end
 
