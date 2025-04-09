@@ -235,7 +235,106 @@ function SimpleUI:CreateTab(name)
     
     -- Tab API
     local TabAPI = {}
+
+    -- Thêm phương thức CreateSlider vào tab API
+    function TabAPI:CreateSlider(title, min, max, default, callback)
+        default = default or min
+        callback = callback or function() end
     
+        local SliderFrame = Instance.new("Frame")
+        SliderFrame.Name = title.."SliderFrame"
+        SliderFrame.Parent = TabContent
+        SliderFrame.BackgroundColor3 = SimpleUI.Colors.LightBackground
+        SliderFrame.Size = UDim2.new(1, 0, 0, 35)
+    
+        local SliderCorner = Instance.new("UICorner")
+        SliderCorner.CornerRadius = UDim.new(0, 4)
+        SliderCorner.Parent = SliderFrame
+    
+        local SliderLabel = Instance.new("TextLabel")
+        SliderLabel.Name = "Label"
+        SliderLabel.Parent = SliderFrame
+        SliderLabel.BackgroundTransparency = 1
+        SliderLabel.Position = UDim2.new(0, 10, 0, 0)
+        SliderLabel.Size = UDim2.new(0.5, -10, 1, 0)
+        SliderLabel.Font = Enum.Font.SourceSansSemibold
+        SliderLabel.Text = title
+        SliderLabel.TextColor3 = SimpleUI.Colors.TextColor
+        SliderLabel.TextSize = 16
+        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+        local SliderBar = Instance.new("Frame")
+        SliderBar.Name = "Bar"
+        SliderBar.Parent = SliderFrame
+        SliderBar.BackgroundColor3 = SimpleUI.Colors.DarkBackground
+        SliderBar.Position = UDim2.new(0.5, 0, 0.5, -5)
+        SliderBar.Size = UDim2.new(0.4, 0, 0, 10)
+    
+        local SliderHandle = Instance.new("Frame")
+        SliderHandle.Name = "Handle"
+        SliderHandle.Parent = SliderBar
+        SliderHandle.BackgroundColor3 = SimpleUI.Colors.AccentColor
+        SliderHandle.Position = UDim2.new((default - min) / (max - min), -5, 0.5, -5)
+        SliderHandle.Size = UDim2.new(0, 10, 0, 10)
+    
+        local function UpdateHandlePosition(value)
+            SliderHandle.Position = UDim2.new((value - min) / (max - min), -5, 0.5, -5)
+        end
+    
+        local value = default
+        SliderHandle.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local moveConnection
+                moveConnection = RunService.RenderStepped:Connect(function()
+                    local mouseX = UserInputService:GetMouseLocation().X
+                    local barStart = SliderBar.AbsolutePosition.X
+                    local barEnd = barStart + SliderBar.AbsoluteSize.X
+                    local percent = math.clamp((mouseX - barStart) / (barEnd - barStart), 0, 1)
+                    value = min + (max - min) * percent
+                    UpdateHandlePosition(value)
+                    callback(value)
+                end)
+    
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        moveConnection:Disconnect()
+                    end
+                end)
+            end
+        end)
+    
+        -- API
+        local SliderAPI = {}
+    
+        function SliderAPI:Set(newValue)
+            value = math.clamp(newValue, min, max)
+            UpdateHandlePosition(value)
+            callback(value)
+        end
+    
+        function SliderAPI:Get()
+            return value
+        end
+    
+        return SliderAPI
+    end
+    
+    -- Thêm nút thu nhỏ (-) vào Main
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.Parent = Header
+    MinimizeButton.BackgroundTransparency = 1
+    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    MinimizeButton.Font = Enum.Font.SourceSansBold
+    MinimizeButton.Text = "-"
+    MinimizeButton.TextColor3 = SimpleUI.Colors.TextColor
+    MinimizeButton.TextSize = 18
+    
+    MinimizeButton.MouseButton1Click:Connect(function()
+        Main.Visible = not Main.Visible
+    end)
+
     -- Create Button
     function TabAPI:CreateButton(title, callback)
         callback = callback or function() end
