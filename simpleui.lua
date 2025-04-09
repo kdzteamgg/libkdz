@@ -95,6 +95,61 @@ function SimpleUI.new(title)
     CloseButton.MouseButton1Click:Connect(function()
         ScreenGui:Destroy()
     end)
+
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.Parent = Header
+    MinimizeButton.BackgroundTransparency = 1
+    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    MinimizeButton.Font = Enum.Font.SourceSansBold
+    MinimizeButton.Text = "-"
+    MinimizeButton.TextColor3 = SimpleUI.Colors.TextColor
+    MinimizeButton.TextSize = 24
+    
+    -- Biến để theo dõi trạng thái thu nhỏ
+    local minimized = false
+    local originalSize = Main.Size
+    local originalTabContainerSize = TabContainer.Size
+    local originalContentContainerPos = ContentContainer.Position
+    local originalContentContainerSize = ContentContainer.Size
+    
+    -- Xử lý sự kiện khi nhấn nút thu nhỏ
+    MinimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        
+        if minimized then
+            -- Thu nhỏ UI
+            TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 600, 0, 30)}):Play()
+            TweenService:Create(TabContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+            TweenService:Create(ContentContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, 0, 0, 0)}):Play()
+            MinimizeButton.Text = "+"
+        else
+            -- Khôi phục kích thước
+            TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalSize}):Play()
+            TweenService:Create(TabContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalTabContainerSize}):Play()
+            TweenService:Create(ContentContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = originalContentContainerSize, Position = originalContentContainerPos}):Play()
+            MinimizeButton.Text = "-"
+        end
+    end)
+    
+    -- Thêm chức năng ẩn/hiện khi nhấn phím Left Ctrl
+    local hidden = false
+    local originalPosition = Main.Position
+    
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.LeftControl and not gameProcessed then
+            hidden = not hidden
+            
+            if hidden then
+                -- Ẩn UI
+                TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(-1, 0, originalPosition.Y.Scale, originalPosition.Y.Offset)}):Play()
+            else
+                -- Hiện UI
+                TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = originalPosition}):Play()
+            end
+        end
+    end)
     
     -- Tab Container
     local TabContainer = Instance.new("Frame")
@@ -152,7 +207,12 @@ function SimpleUI.new(title)
     UILibrary.ContentContainer = ContentContainer
     UILibrary.Tabs = {}
     UILibrary.ActiveTab = nil
-    
+    UILibrary.MinimizeButton = MinimizeButton
+    UILibrary.Minimized = minimized
+    UILibrary.Hidden = hidden
+    UILibrary.OriginalSize = originalSize
+    UILibrary.OriginalPosition = originalPosition
+
     return UILibrary
 end
 
@@ -407,87 +467,6 @@ function SimpleUI:CreateTab(name)
         return SliderAPI
     end
 
-    -- Thêm nút thu nhỏ (-) vào Main
-    local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Name = "MinimizeButton"
-    MinimizeButton.Parent = Header
-    MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
-    MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    MinimizeButton.Font = Enum.Font.SourceSansBold
-    MinimizeButton.Text = "-"
-    MinimizeButton.TextColor3 = SimpleUI.Colors.TextColor
-    MinimizeButton.TextSize = 18
-    
-    MinimizeButton.MouseButton1Click:Connect(function()
-        Main.Visible = not Main.Visible
-    end)
-
-    -- Create Button
-    function TabAPI:CreateButton(title, callback)
-        callback = callback or function() end
-        
-        local ButtonFrame = Instance.new("Frame")
-        ButtonFrame.Name = title.."ButtonFrame"
-        ButtonFrame.Parent = TabContent
-        ButtonFrame.BackgroundColor3 = SimpleUI.Colors.LightBackground
-        ButtonFrame.Size = UDim2.new(1, 0, 0, 35)
-        
-        local ButtonCorner = Instance.new("UICorner")
-        ButtonCorner.CornerRadius = UDim.new(0, 4)
-        ButtonCorner.Parent = ButtonFrame
-        
-        local ButtonLabel = Instance.new("TextLabel")
-        ButtonLabel.Name = "Label"
-        ButtonLabel.Parent = ButtonFrame
-        ButtonLabel.BackgroundTransparency = 1
-        ButtonLabel.Position = UDim2.new(0, 10, 0, 0)
-        ButtonLabel.Size = UDim2.new(1, -20, 1, 0)
-        ButtonLabel.Font = Enum.Font.SourceSansSemibold
-        ButtonLabel.Text = title
-        ButtonLabel.TextColor3 = SimpleUI.Colors.TextColor
-        ButtonLabel.TextSize = 16
-        ButtonLabel.TextXAlignment = Enum.TextXAlignment.Left
-        
-        local Button = Instance.new("TextButton")
-        Button.Name = "Button"
-        Button.Parent = ButtonFrame
-        Button.BackgroundColor3 = SimpleUI.Colors.AccentColor
-        Button.Position = UDim2.new(1, -80, 0.5, -12)
-        Button.Size = UDim2.new(0, 70, 0, 24)
-        Button.Font = Enum.Font.SourceSansBold
-        Button.Text = "Click"
-        Button.TextColor3 = SimpleUI.Colors.TextColor
-        Button.TextSize = 14
-        Button.AutoButtonColor = false
-        
-        local ButtonActionCorner = Instance.new("UICorner")
-        ButtonActionCorner.CornerRadius = UDim.new(0, 4)
-        ButtonActionCorner.Parent = Button
-        
-        -- Button animation
-        Button.MouseEnter:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 150, 255)}):Play()
-        end)
-        
-        Button.MouseLeave:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = SimpleUI.Colors.AccentColor}):Play()
-        end)
-        
-        Button.MouseButton1Down:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(0, 80, 180)}):Play()
-        end)
-        
-        Button.MouseButton1Up:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 150, 255)}):Play()
-        end)
-        
-        Button.MouseButton1Click:Connect(function()
-            callback()
-        end)
-        
-        return Button
-    end
     
     -- Create Toggle
     function TabAPI:CreateToggle(title, default, callback)
